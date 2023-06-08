@@ -67,6 +67,7 @@ namespace ShareX.Setup
         private static string SolutionPath => Path.Combine(ParentDir, "ShareX.sln");
         private static string BinDir => Path.Combine(ParentDir, "ShareX", "bin", Configuration);
         private static string NativeMessagingHostDir => Path.Combine(ParentDir, "ShareX.NativeMessagingHost", "bin", Configuration);
+        private static string ContextMenuHandlerDir => Path.Combine(ParentDir, "ShareX.ContextMenuHandler", "bin", Configuration, "net48");
         private static string SteamLauncherDir => Path.Combine(ParentDir, "ShareX.Steam", "bin", Configuration);
         private static string ExecutablePath => Path.Combine(BinDir, "ShareX.exe");
 
@@ -402,6 +403,7 @@ namespace ShareX.Setup
             else if (job == SetupJobs.CreateMicrosoftStoreFolder || job == SetupJobs.CreateMicrosoftStoreDebugFolder)
             {
                 FileHelpers.CopyAll(MicrosoftStorePackageFilesDir, destination);
+                FileHelpers.CopyAll(ContextMenuHandlerDir, destination);
             }
 
             Console.WriteLine("Folder created: " + destination);

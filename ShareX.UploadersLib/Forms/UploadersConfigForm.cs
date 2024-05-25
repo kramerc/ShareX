@@ -2,7 +2,7 @@
 
 /*
     ShareX - A program that allows you to take screenshots and share any file type
-    Copyright (c) 2007-2023 ShareX Team
+    Copyright (c) 2007-2024 ShareX Team
 
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
@@ -53,7 +53,7 @@ namespace ShareX.UploadersLib
             Config = config;
 
             InitializeComponent();
-            ShareXResources.ApplyTheme(this);
+            ShareXResources.ApplyTheme(this, true);
 
             InitializeControls();
         }
@@ -375,6 +375,8 @@ namespace ShareX.UploadersLib
             }
 
             cbOneDriveCreateShareableLink.Checked = Config.OneDriveAutoCreateShareableLink;
+            cbOneDriveUseDirectLink.Checked = Config.OneDriveUseDirectLink;
+            cbOneDriveUseDirectLink.Enabled = Config.OneDriveAutoCreateShareableLink;
             lblOneDriveFolderID.Text = Resources.UploadersConfigForm_LoadSettings_Selected_folder_ + " " + Config.OneDriveV2SelectedFolder.name;
             tvOneDrive.CollapseAll();
 
@@ -383,22 +385,25 @@ namespace ShareX.UploadersLib
             #region Google Drive
 
             oauth2GoogleDrive.UpdateStatus(Config.GoogleDriveOAuth2Info, Config.GoogleDriveUserInfo);
-            btnGoogleDriveRefreshFolders.Enabled = oauth2GoogleDrive.Connected;
+            //btnGoogleDriveRefreshFolders.Enabled = oauth2GoogleDrive.Connected;
 
             cbGoogleDriveIsPublic.Checked = Config.GoogleDriveIsPublic;
             cbGoogleDriveDirectLink.Checked = Config.GoogleDriveDirectLink;
 
+            /*
             cbGoogleDriveSharedDrive.Items.Clear();
             cbGoogleDriveSharedDrive.Items.Add(GoogleDrive.MyDrive);
             if (Config.GoogleDriveSelectedDrive?.id != GoogleDrive.MyDrive.id)
             {
                 cbGoogleDriveSharedDrive.Items.Add(Config.GoogleDriveSelectedDrive);
             }
+            */
 
             cbGoogleDriveUseFolder.Checked = Config.GoogleDriveUseFolder;
             txtGoogleDriveFolderID.Enabled = Config.GoogleDriveUseFolder;
+            btnGoogleDriveFolderIDHelp.Enabled = Config.GoogleDriveUseFolder;
             txtGoogleDriveFolderID.Text = Config.GoogleDriveFolderID;
-            GoogleDriveSelectConfigDrive();
+            //GoogleDriveSelectConfigDrive();
 
             #endregion Google Drive
 
@@ -601,26 +606,6 @@ namespace ShareX.UploadersLib
 
             #endregion
 
-            #region Teknik
-
-            if (OAuth2Info.CheckOAuth(Config.TeknikOAuth2Info))
-            {
-                oauthTeknik.Status = OAuthLoginStatus.LoginSuccessful;
-            }
-
-            tbTeknikUploadAPIUrl.Text = Config.TeknikUploadAPIUrl;
-            tbTeknikPasteAPIUrl.Text = Config.TeknikPasteAPIUrl;
-            tbTeknikUrlShortenerAPIUrl.Text = Config.TeknikUrlShortenerAPIUrl;
-            tbTeknikAuthUrl.Text = Config.TeknikAuthUrl;
-            cbTeknikEncrypt.Checked = Config.TeknikEncryption;
-            cbTeknikGenDeleteKey.Checked = Config.TeknikGenerateDeletionKey;
-            cbTeknikExpirationUnit.Items.AddRange(Enum.GetNames(typeof(TeknikExpirationUnit)));
-            cbTeknikExpirationUnit.SelectedIndex = (int)Config.TeknikExpirationUnit;
-            nudTeknikExpirationLength.SetValue(Config.TeknikExpirationLength);
-            nudTeknikExpirationLength.Visible = Config.TeknikExpirationUnit != TeknikExpirationUnit.Never;
-
-            #endregion Teknik
-
             #region Pomf
 
             if (Config.PomfUploader == null) Config.PomfUploader = new PomfUploader();
@@ -670,6 +655,7 @@ namespace ShareX.UploadersLib
             cbAzureStorageEnvironment.Text = Config.AzureStorageEnvironment;
             txtAzureStorageCustomDomain.Text = Config.AzureStorageCustomDomain;
             txtAzureStorageUploadPath.Text = Config.AzureStorageUploadPath;
+            txtAzureStorageCacheControl.Text = Config.AzureStorageCacheControl;
             UpdateAzureStorageStatus();
 
             #endregion Azure Storage
@@ -706,23 +692,6 @@ namespace ShareX.UploadersLib
             txtPlikPassword.ReadOnly = !cbPlikIsSecured.Checked;
 
             #endregion Plik
-
-            #region Gfycat
-
-            atcGfycatAccountType.SelectedAccountType = Config.GfycatAccountType;
-
-            oauth2Gfycat.Enabled = Config.GfycatAccountType == AccountType.User;
-
-            if (OAuth2Info.CheckOAuth(Config.GfycatOAuth2Info))
-            {
-                oauth2Gfycat.Status = OAuthLoginStatus.LoginSuccessful;
-            }
-
-            cbGfycatIsPublic.Checked = Config.GfycatIsPublic;
-            cbGfycatKeepAudio.Checked = Config.GfycatKeepAudio;
-            txtGfycatTitle.Text = Config.GfycatTitle;
-
-            #endregion Gfycat
 
             #region YouTube
 
@@ -1671,6 +1640,12 @@ namespace ShareX.UploadersLib
         private void cbOneDriveCreateShareableLink_CheckedChanged(object sender, EventArgs e)
         {
             Config.OneDriveAutoCreateShareableLink = cbOneDriveCreateShareableLink.Checked;
+            cbOneDriveUseDirectLink.Enabled = cbOneDriveCreateShareableLink.Checked;
+        }
+
+        private void cbOneDriveUseDirectLink_CheckedChanged(object sender, EventArgs e)
+        {
+            Config.OneDriveUseDirectLink = cbOneDriveUseDirectLink.Checked;
         }
 
         private void tvOneDrive_AfterSelect(object sender, TreeViewEventArgs e)
@@ -1707,7 +1682,7 @@ namespace ShareX.UploadersLib
             }
 
             oauth2GoogleDrive.UpdateStatus(Config.GoogleDriveOAuth2Info, Config.GoogleDriveUserInfo);
-            btnGoogleDriveRefreshFolders.Enabled = oauth2GoogleDrive.Connected;
+            //btnGoogleDriveRefreshFolders.Enabled = oauth2GoogleDrive.Connected;
 
             this.ForceActivate();
         }
@@ -1732,11 +1707,20 @@ namespace ShareX.UploadersLib
         {
             Config.GoogleDriveUseFolder = cbGoogleDriveUseFolder.Checked;
             txtGoogleDriveFolderID.Enabled = Config.GoogleDriveUseFolder;
+            btnGoogleDriveFolderIDHelp.Enabled = Config.GoogleDriveUseFolder;
         }
 
         private void txtGoogleDriveFolderID_TextChanged(object sender, EventArgs e)
         {
             Config.GoogleDriveFolderID = txtGoogleDriveFolderID.Text;
+        }
+
+        private void btnGoogleDriveFolderIDHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(@"Unfortunately, Google has forced us to use a more restrictive API scope, which does not allow us to see files or folders anymore. Because of this, we cannot provide folder listing and selection anymore.
+
+However, there is a workaround. You can navigate to the Google Drive website in your browser, open the folder you want to upload to, and then copy the folder ID from the browser's address bar to here.",
+"ShareX - Google Drive", MessageBoxButtons.OK, MessageBoxIcon.Question);
         }
 
         private void btnGoogleDriveRefreshFolders_Click(object sender, EventArgs e)
@@ -2420,72 +2404,6 @@ namespace ShareX.UploadersLib
 
         #endregion Lambda
 
-        #region Teknik
-
-        private void oauthTeknik_OpenButtonClicked()
-        {
-            OAuth2Info oauth = new OAuth2Info(APIKeys.TeknikClientID, APIKeys.TeknikClientSecret);
-            Config.TeknikOAuth2Info = OAuth2Open(new TeknikUploader(oauth, Config.TeknikAuthUrl));
-        }
-
-        private void oauthTeknik_CompleteButtonClicked(string code)
-        {
-            OAuth2Complete(new TeknikUploader(Config.TeknikOAuth2Info, Config.TeknikAuthUrl), code, oauthTeknik);
-        }
-
-        private void oauthTeknik_ClearButtonClicked()
-        {
-            Config.TeknikOAuth2Info = null;
-        }
-
-        private void oauthTeknik_RefreshButtonClicked()
-        {
-            OAuth2Refresh(new TeknikUploader(Config.TeknikOAuth2Info, Config.TeknikAuthUrl), oauthTeknik);
-        }
-
-        private void tbTeknikAuthUrl_TextChanged(object sender, EventArgs e)
-        {
-            Config.TeknikAuthUrl = tbTeknikAuthUrl.Text;
-        }
-
-        private void tbTeknikUploadAPIUrl_TextChanged(object sender, EventArgs e)
-        {
-            Config.TeknikUploadAPIUrl = tbTeknikUploadAPIUrl.Text;
-        }
-
-        private void tbTeknikPasteAPIUrl_TextChanged(object sender, EventArgs e)
-        {
-            Config.TeknikPasteAPIUrl = tbTeknikPasteAPIUrl.Text;
-        }
-
-        private void tbTeknikUrlShortenerAPIUrl_TextChanged(object sender, EventArgs e)
-        {
-            Config.TeknikUrlShortenerAPIUrl = tbTeknikUrlShortenerAPIUrl.Text;
-        }
-
-        private void cbTeknikEncrypt_CheckedChanged(object sender, EventArgs e)
-        {
-            Config.TeknikEncryption = cbTeknikEncrypt.Checked;
-        }
-
-        private void cbTeknikGenDeleteKey_CheckedChanged(object sender, EventArgs e)
-        {
-            Config.TeknikGenerateDeletionKey = cbTeknikGenDeleteKey.Checked;
-        }
-
-        private void cbTeknikExpirationUnit_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            Config.TeknikExpirationUnit = (TeknikExpirationUnit)cbTeknikExpirationUnit.SelectedIndex;
-            nudTeknikExpirationLength.Visible = Config.TeknikExpirationUnit != TeknikExpirationUnit.Never;
-        }
-
-        private void nudTeknikExpirationLength_ValueChanged(object sender, EventArgs e)
-        {
-            Config.TeknikExpirationLength = (int)nudTeknikExpirationLength.Value;
-        }
-
-        #endregion Teknik
-
         #region Pomf
 
         private void txtPomfUploadURL_TextChanged(object sender, EventArgs e)
@@ -2861,6 +2779,12 @@ namespace ShareX.UploadersLib
             UpdateAzureStorageStatus();
         }
 
+        private void txtAzureStorageCacheControl_TextChanged(object sender, EventArgs e)
+        {
+            Config.AzureStorageCacheControl = txtAzureStorageCacheControl.Text;
+            UpdateAzureStorageStatus();
+        }
+
         #endregion Azure Storage
 
         #region Backblaze B2
@@ -2970,52 +2894,6 @@ namespace ShareX.UploadersLib
         }
 
         #endregion Plik
-
-        #region Gfycat
-
-        private void atcGfycatAccountType_AccountTypeChanged(AccountType accountType)
-        {
-            Config.GfycatAccountType = accountType;
-            oauth2Gfycat.Enabled = Config.GfycatAccountType == AccountType.User;
-        }
-
-        private void oauth2Gfycat_OpenButtonClicked()
-        {
-            OAuth2Info oauth = new OAuth2Info(APIKeys.GfycatClientID, APIKeys.GfycatClientSecret);
-            Config.GfycatOAuth2Info = OAuth2Open(new GfycatUploader(oauth));
-        }
-
-        private void oauth2Gfycat_CompleteButtonClicked(string code)
-        {
-            OAuth2Complete(new GfycatUploader(Config.GfycatOAuth2Info), code, oauth2Gfycat);
-        }
-
-        private void oauth2Gfycat_ClearButtonClicked()
-        {
-            Config.GfycatOAuth2Info = null;
-        }
-
-        private void oauth2Gfycat_RefreshButtonClicked()
-        {
-            OAuth2Refresh(new GfycatUploader(Config.GfycatOAuth2Info), oauth2Gfycat);
-        }
-
-        private void cbGfycatIsPublic_CheckedChanged(object sender, EventArgs e)
-        {
-            Config.GfycatIsPublic = cbGfycatIsPublic.Checked;
-        }
-
-        private void cbGfycatKeepAudio_CheckedChanged(object sender, EventArgs e)
-        {
-            Config.GfycatKeepAudio = cbGfycatKeepAudio.Checked;
-        }
-
-        private void txtGfycatTitle_TextChanged(object sender, EventArgs e)
-        {
-            Config.GfycatTitle = txtGfycatTitle.Text;
-        }
-
-        #endregion Gfycat
 
         #region YouTube
 

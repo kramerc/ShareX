@@ -2,7 +2,7 @@
 
 /*
     ShareX - A program that allows you to take screenshots and share any file type
-    Copyright (c) 2007-2023 ShareX Team
+    Copyright (c) 2007-2024 ShareX Team
 
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
@@ -28,6 +28,7 @@ using ShareX.HelpersLib;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace ShareX.Setup
 {
@@ -94,7 +95,7 @@ namespace ShareX.Setup
         private static string MakeAppxPath => Path.Combine(WindowsKitsDir, "x64", "makeappx.exe");
 
         private const string InnoSetupCompilerPath = @"C:\Program Files (x86)\Inno Setup 6\ISCC.exe";
-        private const string FFmpegDownloadURL = "https://github.com/ShareX/FFmpeg/releases/download/v5.1/ffmpeg-5.1-win64.zip";
+        private const string FFmpegDownloadURL = "https://github.com/ShareX/FFmpeg/releases/download/v7.0/ffmpeg-7.0-win64.zip";
 
         private static void Main(string[] args)
         {
@@ -378,15 +379,19 @@ namespace ShareX.Setup
 
                 FileHelpers.CopyFiles(RecorderDevicesSetupPath, destination);
 
-                FileHelpers.CopyFiles(Path.Combine(NativeMessagingHostDir, "ShareX_NativeMessagingHost.exe"), destination);
+                FileHelpers.CopyFiles(Path.Combine(source, "ShareX_NativeMessagingHost.exe"), destination);
+                FileHelpers.CopyFiles(Path.Combine(source, "host-manifest-chrome.json"), destination);
+                FileHelpers.CopyFiles(Path.Combine(source, "host-manifest-firefox.json"), destination);
             }
 
-            string[] languages = new string[] { "de", "es", "es-MX", "fa-IR", "fr", "hu", "id-ID", "it-IT", "ja-JP", "ko-KR", "nl-NL", "pl", "pt-BR", "pt-PT",
-                "ro", "ru", "tr", "uk", "vi-VN", "zh-CN", "zh-TW" };
-
-            foreach (string language in languages)
+            foreach (string directory in Directory.GetDirectories(source))
             {
-                FileHelpers.CopyFiles(Path.Combine(source, language), Path.Combine(destination, "Languages", language), "*.resources.dll");
+                string language = Path.GetFileName(directory);
+
+                if (Regex.IsMatch(language, "^[a-z]{2}(?:-[A-Z]{2})?$"))
+                {
+                    FileHelpers.CopyFiles(Path.Combine(source, language), Path.Combine(destination, "Languages", language), "*.resources.dll");
+                }
             }
 
             if (File.Exists(FFmpegPath))
@@ -425,7 +430,7 @@ namespace ShareX.Setup
                 string filePath = Path.Combine(OutputDir, fileName);
 
                 Console.WriteLine("Downloading: " + FFmpegDownloadURL);
-                URLHelpers.DownloadFile(FFmpegDownloadURL, filePath);
+                WebHelpers.DownloadFileAsync(FFmpegDownloadURL, filePath).GetAwaiter().GetResult();
 
                 Console.WriteLine("Extracting: " + filePath);
                 ZipManager.Extract(filePath, OutputDir, false, entry => entry.Name.Equals("ffmpeg.exe", StringComparison.OrdinalIgnoreCase));
